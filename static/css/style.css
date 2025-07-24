@@ -16,13 +16,24 @@
     --ocean-gradient-light: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
 }
 
+/* Импорт шрифтов */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 body {
     background: var(--ocean-gradient-light);
     color: var(--ocean-text);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
     min-height: 100vh;
     margin: 0;
     padding: 0;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* Полноэкранные контейнеры */
@@ -40,6 +51,59 @@ main.container-fluid {
     margin-top: 1rem;
 }
 
+/* Типографика */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    color: var(--ocean-text);
+    margin-bottom: 0.5em;
+}
+
+h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+}
+
+h3 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+h4 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+}
+
+h5 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+h6 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+}
+
+p {
+    font-size: 1rem;
+    line-height: 1.7;
+    letter-spacing: -0.005em;
+    margin-bottom: 1rem;
+}
+
 /* Навигация */
 .navbar {
     background: var(--ocean-gradient) !important;
@@ -48,10 +112,12 @@ main.container-fluid {
 }
 
 .navbar-brand {
-    font-weight: 700;
-    font-size: 1.5rem;
+    font-weight: 800;
+    font-size: 1.75rem;
     color: white !important;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    letter-spacing: -0.02em;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .navbar-nav .nav-link {
@@ -86,10 +152,20 @@ main.container-fluid {
 .card-header {
     background: var(--ocean-gradient-light);
     border-bottom: 2px solid var(--ocean-border);
-    font-weight: 600;
+    font-weight: 700;
     color: var(--ocean-primary);
     padding: 1.25rem 1.5rem;
     border-radius: 16px 16px 0 0 !important;
+    font-size: 1.125rem;
+    letter-spacing: -0.01em;
+}
+
+.card-header h5 {
+    font-weight: 700;
+    font-size: 1.125rem;
+    letter-spacing: -0.01em;
+    margin: 0;
+    color: var(--ocean-primary);
 }
 
 .card-body {
@@ -148,17 +224,20 @@ main.container-fluid {
 
 .stat-number {
     font-size: 1.75rem;
-    font-weight: 700;
+    font-weight: 800;
     color: var(--ocean-primary);
     line-height: 1;
+    letter-spacing: -0.02em;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .stat-label {
     font-size: 0.875rem;
     color: var(--ocean-text-light);
-    font-weight: 500;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.75px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* Старые статистические карточки (для совместимости) */
@@ -215,12 +294,22 @@ main.container-fluid {
 .table th {
     background: var(--ocean-gradient-light);
     border: none;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--ocean-primary);
     font-size: 0.875rem;
     padding: 1rem;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.75px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--ocean-border);
+    vertical-align: middle;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    letter-spacing: -0.005em;
 }
 
 .table td {
@@ -244,8 +333,18 @@ main.container-fluid {
     border-radius: 12px;
     padding: 0.75rem 1rem;
     font-size: 1rem;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: -0.005em;
     transition: all 0.3s ease;
     background: white;
+}
+
+.form-control::placeholder {
+    color: var(--ocean-text-light);
+    font-weight: 400;
+    letter-spacing: -0.005em;
 }
 
 .form-control:focus, .form-select:focus {
@@ -258,11 +357,15 @@ main.container-fluid {
 .btn {
     border-radius: 12px;
     font-weight: 600;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 0.95rem;
     padding: 0.75rem 1.5rem;
     transition: all 0.3s ease;
     border: none;
     position: relative;
     overflow: hidden;
+    letter-spacing: -0.01em;
+    line-height: 1.4;
 }
 
 .btn-primary {
@@ -444,6 +547,32 @@ main.container-fluid {
     main.container-fluid {
         padding-left: 1rem;
         padding-right: 1rem;
+    }
+    
+    /* Адаптивная типографика */
+    h1 {
+        font-size: 2rem;
+        letter-spacing: -0.025em;
+    }
+    
+    h2 {
+        font-size: 1.75rem;
+        letter-spacing: -0.02em;
+    }
+    
+    h3 {
+        font-size: 1.5rem;
+        letter-spacing: -0.015em;
+    }
+    
+    .navbar-brand {
+        font-size: 1.5rem;
+        letter-spacing: -0.015em;
+    }
+    
+    .card-header h5 {
+        font-size: 1rem;
+        letter-spacing: -0.005em;
     }
     
     .d-flex.gap-2 {
@@ -802,15 +931,21 @@ main.container-fluid {
 }
 
 .activity-title {
-    font-weight: 600;
+    font-weight: 700;
     color: var(--ocean-text);
     margin-bottom: 0.25rem;
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .activity-desc {
     font-size: 0.875rem;
     color: var(--ocean-text-light);
     margin-bottom: 0.25rem;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    line-height: 1.4;
 }
 
 .activity-time {
