@@ -3,22 +3,11 @@
 {% block title %}Дашборд - Clienterra CRM{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div class="d-flex gap-2">
-        <input type="text" id="searchInput" class="form-control" placeholder="Поиск по клиентам..." style="width: 300px;">
-        <select id="statusFilter" class="form-select" style="width: 150px;">
-            <option value="">Все статусы</option>
-            <option value="новый">Новый</option>
-            <option value="в работе">В работе</option>
-            <option value="завершён">Завершён</option>
-        </select>
-    </div>
-</div>
-
-<!-- Статистика -->
+<!-- Статистика и поиск -->
 <div class="row mb-4">
     <div class="col-12">
-        <div class="stats-icons">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="stats-icons">
             <div class="stat-icon">
                 <div class="icon-wrapper bg-primary">
                     <i class="fas fa-users"></i>
@@ -56,6 +45,17 @@
                 <div class="stat-info">
                     <span class="stat-number">{{ clients|selectattr('status', 'equalto', 'завершён')|list|length }}</span>
                     <span class="stat-label">Завершённые</span>
+                </div>
+            </div>
+            <div class="search-section">
+                <div class="d-flex gap-2">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Поиск по клиентам..." style="width: 250px;">
+                    <select id="statusFilter" class="form-select" style="width: 140px;">
+                        <option value="">Все статусы</option>
+                        <option value="новый">Новый</option>
+                        <option value="в работе">В работе</option>
+                        <option value="завершён">Завершён</option>
+                    </select>
                 </div>
             </div>
         </div>

@@ -223,10 +223,34 @@ p {
 .stats-icons {
     display: flex;
     gap: 2rem;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     flex-wrap: wrap;
     padding: 1rem 0;
+    flex: 1;
+}
+
+/* Секция поиска */
+.search-section {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+}
+
+.search-section .form-control,
+.search-section .form-select {
+    height: 42px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    border: 2px solid var(--ocean-border);
+    transition: all 0.3s ease;
+}
+
+.search-section .form-control:focus,
+.search-section .form-select:focus {
+    border-color: var(--ocean-secondary);
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15);
+    transform: translateY(-1px);
 }
 
 .stat-icon {
@@ -811,6 +835,21 @@ p {
     .stats-icons {
         gap: 1rem;
         padding: 0.5rem 0;
+        justify-content: center;
+        flex: none;
+    }
+    
+    /* Секция поиска на мобильных */
+    .search-section {
+        width: 100%;
+        margin-top: 1rem;
+        justify-content: center;
+    }
+    
+    .search-section .form-control,
+    .search-section .form-select {
+        height: 40px;
+        font-size: 0.875rem;
     }
     
     .stat-icon {
@@ -911,6 +950,24 @@ p {
     .card-title i {
         font-size: 0.8rem;
         margin-right: 0.4rem;
+    }
+    
+    /* Секция поиска на маленьких экранах */
+    .search-section {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .search-section .d-flex {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .search-section .form-control,
+    .search-section .form-select {
+        width: 100% !important;
+        height: 38px;
+        font-size: 0.8rem;
     }
     
     .stats-card {
