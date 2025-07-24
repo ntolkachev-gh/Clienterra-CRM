@@ -236,4 +236,21 @@ function toggleTheme() {
 (function initTheme() {
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
-})(); 
+})();
+
+// Функции для быстрых действий
+function showNewClientModal() {
+    showNotification('Функция добавления клиента будет доступна в следующем обновлении', 'info');
+}
+
+function exportClients() {
+    showNotification('Экспорт данных будет доступен в следующем обновлении', 'info');
+}
+
+function showAnalytics() {
+    showNotification('Детальная аналитика будет доступна в следующем обновлении', 'info');
+}
+
+function showSettings() {
+    window.location.href = '/settings';
+} 
