@@ -82,9 +82,18 @@ function showNotification(message, type = 'info', duration = 3000) {
     
     document.body.appendChild(notification);
     
+    // Применяем анимацию появления
+    animateNotification(notification);
+    
     setTimeout(() => {
         if (notification.parentNode) {
-            notification.remove();
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 300);
         }
     }, duration);
 }
@@ -237,6 +246,123 @@ function toggleTheme() {
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
 })();
+
+// Анимации при загрузке страницы
+function initPageAnimations() {
+    // Анимация для элементов с классом animate-on-load
+    const animateElements = document.querySelectorAll('.animate-on-load');
+    animateElements.forEach((element, index) => {
+        element.style.animationDelay = `${index * 0.1}s`;
+        element.classList.add('animate-fade-in-up');
+    });
+
+    // Анимация для строк таблицы
+    const tableRows = document.querySelectorAll('tbody tr');
+    tableRows.forEach((row, index) => {
+        row.style.animationDelay = `${0.5 + index * 0.05}s`;
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            row.style.transition = 'all 0.4s ease-out';
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+        }, 500 + index * 50);
+    });
+
+    // Анимация для кнопок быстрых действий
+    const quickActionBtns = document.querySelectorAll('.quick-action-btn');
+    quickActionBtns.forEach((btn, index) => {
+        btn.style.animationDelay = `${0.2 + index * 0.1}s`;
+    });
+
+    // Анимация для элементов активности
+    const activityItems = document.querySelectorAll('.activity-item');
+    activityItems.forEach((item, index) => {
+        item.style.animationDelay = `${0.3 + index * 0.1}s`;
+        item.style.opacity = '0';
+        item.style.transform = 'translateX(-20px)';
+        setTimeout(() => {
+            item.style.transition = 'all 0.4s ease-out';
+            item.style.opacity = '1';
+            item.style.transform = 'translateX(0)';
+        }, 300 + index * 100);
+    });
+
+    // Анимация для элементов источников
+    const sourceItems = document.querySelectorAll('.source-item');
+    sourceItems.forEach((item, index) => {
+        item.style.animationDelay = `${0.4 + index * 0.1}s`;
+        item.style.opacity = '0';
+        item.style.transform = 'translateX(20px)';
+        setTimeout(() => {
+            item.style.transition = 'all 0.4s ease-out';
+            item.style.opacity = '1';
+            item.style.transform = 'translateX(0)';
+        }, 400 + index * 100);
+    });
+}
+
+// Анимация при переходе между страницами
+function animatePageTransition() {
+    const mainContent = document.querySelector('main');
+    if (mainContent) {
+        mainContent.style.opacity = '0';
+        mainContent.style.transform = 'translateY(20px)';
+        mainContent.style.transition = 'all 0.3s ease-out';
+        
+        setTimeout(() => {
+            mainContent.style.opacity = '1';
+            mainContent.style.transform = 'translateY(0)';
+        }, 100);
+    }
+}
+
+// Анимация для модальных окон
+function animateModal(modal, show = true) {
+    if (show) {
+        modal.style.opacity = '0';
+        modal.style.transform = 'scale(0.8)';
+        modal.style.transition = 'all 0.3s ease-out';
+        
+        setTimeout(() => {
+            modal.style.opacity = '1';
+            modal.style.transform = 'scale(1)';
+        }, 100);
+    } else {
+        modal.style.opacity = '0';
+        modal.style.transform = 'scale(0.8)';
+    }
+}
+
+// Анимация для уведомлений
+function animateNotification(notification) {
+    notification.style.opacity = '0';
+    notification.style.transform = 'translateX(100%)';
+    notification.style.transition = 'all 0.3s ease-out';
+    
+    setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+}
+
+// Инициализация анимаций при загрузке DOM
+document.addEventListener('DOMContentLoaded', function() {
+    // Запускаем анимации с небольшой задержкой
+    setTimeout(() => {
+        initPageAnimations();
+    }, 100);
+    
+    // Анимация при переходе по ссылкам
+    const links = document.querySelectorAll('a[href^="/"]');
+    links.forEach(link => {
+        link.addEventListener('click', function(e) {
+            if (!this.target && !this.hasAttribute('download')) {
+                animatePageTransition();
+            }
+        });
+    });
+});
 
 // Функции для быстрых действий
 function showNewClientModal() {
