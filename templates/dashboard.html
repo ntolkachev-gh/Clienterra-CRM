@@ -18,47 +18,46 @@
 
 <!-- Статистика -->
 <div class="row mb-4">
-    <div class="col-md-3">
-        <div class="stats-card">
-            <div class="d-flex justify-content-between">
-                <div>
-                    <h4>{{ clients|length }}</h4>
-                    <p>Всего клиентов</p>
+    <div class="col-12">
+        <div class="stats-icons">
+            <div class="stat-icon">
+                <div class="icon-wrapper bg-primary">
+                    <i class="fas fa-users"></i>
                 </div>
-                <i class="fas fa-users"></i>
+                <div class="stat-info">
+                    <span class="stat-number">{{ clients|length }}</span>
+                    <span class="stat-label">Всего клиентов</span>
+                </div>
             </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stats-card" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
-            <div class="d-flex justify-content-between">
-                <div>
-                    <h4>{{ clients|selectattr('status', 'equalto', 'новый')|list|length }}</h4>
-                    <p>Новые лиды</p>
+            
+            <div class="stat-icon">
+                <div class="icon-wrapper bg-success">
+                    <i class="fas fa-star"></i>
                 </div>
-                <i class="fas fa-star"></i>
+                <div class="stat-info">
+                    <span class="stat-number">{{ clients|selectattr('status', 'equalto', 'новый')|list|length }}</span>
+                    <span class="stat-label">Новые лиды</span>
+                </div>
             </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stats-card" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);">
-            <div class="d-flex justify-content-between">
-                <div>
-                    <h4>{{ clients|selectattr('status', 'equalto', 'в работе')|list|length }}</h4>
-                    <p>В работе</p>
+            
+            <div class="stat-icon">
+                <div class="icon-wrapper bg-warning">
+                    <i class="fas fa-cogs"></i>
                 </div>
-                <i class="fas fa-cogs"></i>
+                <div class="stat-info">
+                    <span class="stat-number">{{ clients|selectattr('status', 'equalto', 'в работе')|list|length }}</span>
+                    <span class="stat-label">В работе</span>
+                </div>
             </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stats-card" style="background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);">
-            <div class="d-flex justify-content-between">
-                <div>
-                    <h4>{{ clients|selectattr('status', 'equalto', 'завершён')|list|length }}</h4>
-                    <p>Завершённые</p>
+            
+            <div class="stat-icon">
+                <div class="icon-wrapper bg-info">
+                    <i class="fas fa-check-circle"></i>
                 </div>
-                <i class="fas fa-check-circle"></i>
+                <div class="stat-info">
+                    <span class="stat-number">{{ clients|selectattr('status', 'equalto', 'завершён')|list|length }}</span>
+                    <span class="stat-label">Завершённые</span>
+                </div>
             </div>
         </div>
     </div>

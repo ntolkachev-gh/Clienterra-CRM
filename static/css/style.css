@@ -96,7 +96,72 @@ main.container-fluid {
     padding: 1.5rem;
 }
 
-/* Статистические карточки */
+/* Статистические иконки */
+.stats-icons {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 1rem 0;
+}
+
+.stat-icon {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px var(--ocean-shadow);
+    transition: all 0.3s ease;
+    min-width: 200px;
+}
+
+.stat-icon:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(30, 58, 138, 0.15);
+}
+
+.icon-wrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.stat-icon:hover .icon-wrapper {
+    transform: scale(1.1);
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.stat-number {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--ocean-primary);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--ocean-text-light);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Старые статистические карточки (для совместимости) */
 .stats-card {
     background: var(--ocean-gradient);
     color: white;
@@ -378,6 +443,32 @@ main.container-fluid {
         height: 400px !important;
     }
     
+    /* Статистические иконки на мобильных */
+    .stats-icons {
+        gap: 1rem;
+        padding: 0.5rem 0;
+    }
+    
+    .stat-icon {
+        padding: 0.75rem 1rem;
+        min-width: 160px;
+        gap: 0.75rem;
+    }
+    
+    .icon-wrapper {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .stat-label {
+        font-size: 0.75rem;
+    }
+    
     .stats-card {
         padding: 1rem;
         min-height: 100px;
@@ -425,6 +516,32 @@ main.container-fluid {
     .btn {
         padding: 0.5rem 1rem;
         font-size: 0.875rem;
+    }
+    
+    /* Статистические иконки на маленьких экранах */
+    .stats-icons {
+        gap: 0.5rem;
+        padding: 0.25rem 0;
+    }
+    
+    .stat-icon {
+        padding: 0.5rem 0.75rem;
+        min-width: 140px;
+        gap: 0.5rem;
+    }
+    
+    .icon-wrapper {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .stat-number {
+        font-size: 1.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.7rem;
     }
     
     .stats-card {
