@@ -104,6 +104,53 @@ p {
     margin-bottom: 1rem;
 }
 
+/* Заголовки с иконками */
+.page-title {
+    display: flex;
+    align-items: center;
+    font-weight: 800;
+    font-size: 2.5rem;
+    letter-spacing: -0.03em;
+    color: var(--ocean-primary);
+    margin-bottom: 0;
+}
+
+.page-title i {
+    color: var(--ocean-secondary);
+    font-size: 2.25rem;
+    margin-right: 1rem;
+    opacity: 0.9;
+    transition: all 0.3s ease;
+}
+
+.page-title:hover i {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+.card-title {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: 1.125rem;
+    letter-spacing: -0.01em;
+    color: var(--ocean-primary);
+    margin: 0;
+}
+
+.card-title i {
+    color: var(--ocean-secondary);
+    font-size: 1rem;
+    margin-right: 0.75rem;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+}
+
+.card-title:hover i {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
 /* Навигация */
 .navbar {
     background: var(--ocean-gradient) !important;
@@ -575,6 +622,27 @@ p {
         letter-spacing: -0.005em;
     }
     
+    /* Адаптивные заголовки с иконками */
+    .page-title {
+        font-size: 2rem;
+        letter-spacing: -0.025em;
+    }
+    
+    .page-title i {
+        font-size: 1.75rem;
+        margin-right: 0.75rem;
+    }
+    
+    .card-title {
+        font-size: 1rem;
+        letter-spacing: -0.005em;
+    }
+    
+    .card-title i {
+        font-size: 0.875rem;
+        margin-right: 0.5rem;
+    }
+    
     .d-flex.gap-2 {
         flex-direction: column;
         gap: 0.75rem !important;
@@ -675,6 +743,27 @@ p {
     .source-count {
         font-size: 1rem;
         padding: 0.2rem 0.5rem;
+    }
+    
+    /* Заголовки с иконками на маленьких экранах */
+    .page-title {
+        font-size: 1.75rem;
+        letter-spacing: -0.02em;
+    }
+    
+    .page-title i {
+        font-size: 1.5rem;
+        margin-right: 0.5rem;
+    }
+    
+    .card-title {
+        font-size: 0.95rem;
+        letter-spacing: -0.005em;
+    }
+    
+    .card-title i {
+        font-size: 0.8rem;
+        margin-right: 0.4rem;
     }
     
     .stats-card {

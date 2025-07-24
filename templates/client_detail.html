@@ -11,8 +11,8 @@
                 <li class="breadcrumb-item active">Клиент {{ client.id }}</li>
             </ol>
         </nav>
-        <h1>
-            <i class="fas fa-user me-2"></i>
+        <h1 class="page-title">
+            <i class="fas fa-user me-3"></i>
             {% if client.name %}
                 {{ client.name }}
             {% else %}
@@ -32,7 +32,9 @@
     <div class="col-md-4">
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Информация о клиенте</h5>
+                <h5 class="card-title">
+                    <i class="fas fa-info-circle me-3"></i>Информация о клиенте
+                </h5>
             </div>
             <div class="card-body">
                 <table class="table table-borderless">
@@ -90,7 +92,9 @@
         {% if client.project_description %}
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-project-diagram me-2"></i>Описание проекта</h5>
+                <h5 class="card-title">
+                    <i class="fas fa-project-diagram me-3"></i>Описание проекта
+                </h5>
             </div>
             <div class="card-body">
                 <p>{{ client.project_description }}</p>
