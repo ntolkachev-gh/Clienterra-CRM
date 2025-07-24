@@ -239,7 +239,7 @@ p {
 
 .search-section .form-control,
 .search-section .form-select {
-    height: 46px;
+    height: 50px;
     border-radius: 10px;
     font-size: 0.9rem;
     border: 2px solid var(--ocean-border);
@@ -849,7 +849,7 @@ p {
     
     .search-section .form-control,
     .search-section .form-select {
-        height: 44px;
+        height: 48px;
         font-size: 0.875rem;
     }
     
@@ -967,7 +967,7 @@ p {
     .search-section .form-control,
     .search-section .form-select {
         width: 100% !important;
-        height: 42px;
+        height: 46px;
         font-size: 0.8rem;
     }
     
