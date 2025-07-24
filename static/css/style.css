@@ -244,6 +244,7 @@ p {
     font-size: 0.9rem;
     border: 2px solid var(--ocean-border);
     transition: all 0.3s ease;
+    min-width: 160px;
 }
 
 .search-section .form-control:focus,
