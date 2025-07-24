@@ -11,14 +11,6 @@
                 <li class="breadcrumb-item active">Клиент {{ client.id }}</li>
             </ol>
         </nav>
-        <h1 class="page-title">
-            <i class="fas fa-user me-3"></i>
-            {% if client.name %}
-                {{ client.name }}
-            {% else %}
-                Клиент {{ client.id }}
-            {% endif %}
-        </h1>
     </div>
     <div>
         <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
