@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}Клиент {{ client.name or client.telegram_id }} - Clienterra CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Дашборд</a></li>
+                <li class="breadcrumb-item active">Клиент {{ client.id }}</li>
+            </ol>
+        </nav>
+        <h1>
+            <i class="fas fa-user me-2"></i>
+            {% if client.name %}
+                {{ client.name }}
+            {% else %}
+                Клиент {{ client.id }}
+            {% endif %}
+        </h1>
+    </div>
+    <div>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Назад
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Информация о клиенте -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Информация о клиенте</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <td><strong>ID:</strong></td>
+                        <td>{{ client.id }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Telegram ID:</strong></td>
+                        <td><code>{{ client.telegram_id }}</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Имя:</strong></td>
+                        <td>
+                            {% if client.name %}
+                                {{ client.name }}
+                            {% else %}
+                                <span class="text-muted">Не указано</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Организация:</strong></td>
+                        <td>
+                            {% if client.organization %}
+                                {{ client.organization }}
+                            {% else %}
+                                <span class="text-muted">Не указано</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Статус:</strong></td>
+                        <td>
+                            <select class="form-select form-select-sm status-select" data-client-id="{{ client.id }}">
+                                <option value="новый" {% if client.status == 'новый' %}selected{% endif %}>Новый</option>
+                                <option value="в работе" {% if client.status == 'в работе' %}selected{% endif %}>В работе</option>
+                                <option value="завершён" {% if client.status == 'завершён' %}selected{% endif %}>Завершён</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Создан:</strong></td>
+                        <td>{{ client.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Последняя активность:</strong></td>
+                        <td>{{ client.updated_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Описание проекта -->
+        {% if client.project_description %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-project-diagram me-2"></i>Описание проекта</h5>
+            </div>
+            <div class="card-body">
+                <p>{{ client.project_description }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Требуемые функции -->
+        {% if client.required_functions %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>Требуемые функции</h5>
+            </div>
+            <div class="card-body">
+                <p>{{ client.required_functions }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Источник трафика -->
+        {% if client.traffic_source %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Источник трафика</h5>
+            </div>
+            <div class="card-body">
+                <p>{{ client.traffic_source }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Диалог -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-comments me-2"></i>Диалог ({{ messages|length }} сообщений)</h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="scrollToBottom()">
+                    <i class="fas fa-arrow-down me-1"></i>К последнему сообщению
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="chat-container" id="chatContainer" style="height: 600px; overflow-y: auto;">
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="message-item p-3 border-bottom {% if message.is_from_bot %}bg-light{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center">
+                                    {% if message.is_from_bot %}
+                                        <i class="fas fa-robot text-primary me-2"></i>
+                                        <strong class="text-primary">Бот</strong>
+                                    {% else %}
+                                        <i class="fas fa-user text-success me-2"></i>
+                                        <strong class="text-success">
+                                            {% if client.name %}
+                                                {{ client.name }}
+                                            {% else %}
+                                                Клиент
+                                            {% endif %}
+                                        </strong>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">{{ message.timestamp.strftime('%d.%m.%Y %H:%M:%S') }}</small>
+                            </div>
+                            <div class="message-text">
+                                {{ message.message_text|nl2br|safe }}
+                            </div>
+                            {% if message.attachment_path %}
+                            <div class="mt-2">
+                                <i class="fas fa-paperclip me-1"></i>
+                                <a href="{{ message.attachment_path }}" target="_blank" class="text-decoration-none">
+                                    Вложение
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-comment-slash fa-3x mb-3"></i>
+                        <p>Сообщений пока нет</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Обновление статуса клиента
+document.querySelector('.status-select').addEventListener('change', function() {
+    const clientId = this.getAttribute('data-client-id');
+    const newStatus = this.value;
+    
+    fetch('/update_client_status', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            client_id: clientId,
+            status: newStatus
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Статус клиента обновлён', 'success');
+        } else {
+            showNotification('Ошибка при обновлении статуса', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Ошибка при обновлении статуса', 'error');
+    });
+});
+
+// Прокрутка к последнему сообщению
+function scrollToBottom() {
+    const chatContainer = document.getElementById('chatContainer');
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+// Автоматическая прокрутка к последнему сообщению при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    scrollToBottom();
+});
+
+function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+</script>
+{% endblock %} 

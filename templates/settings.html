@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Настройки - Clienterra CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-cog me-2"></i>Настройки</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-comment-dots me-2"></i>Приветственное сообщение бота</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="welcome_message" class="form-label">Текст приветственного сообщения</label>
+                        <textarea 
+                            class="form-control" 
+                            id="welcome_message" 
+                            name="welcome_message" 
+                            rows="6" 
+                            placeholder="Введите текст приветственного сообщения..."
+                            required
+                        >{{ settings.welcome_message }}</textarea>
+                        <div class="form-text">
+                            Это сообщение будет отправляться пользователям при первом обращении к боту (/start).
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Сохранить изменения
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetToDefault()">
+                            <i class="fas fa-undo me-2"></i>Сбросить к стандартному
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Информация</h5>
+            </div>
+            <div class="card-body">
+                <h6>Советы по написанию приветственного сообщения:</h6>
+                <ul class="small">
+                    <li>Будьте дружелюбными и профессиональными</li>
+                    <li>Кратко опишите, чем может помочь бот</li>
+                    <li>Предложите пользователю рассказать о своих потребностях</li>
+                    <li>Используйте эмодзи для создания позитивного настроения</li>
+                </ul>
+                
+                <hr>
+                
+                <h6>Переменные (будут заменены автоматически):</h6>
+                <ul class="small">
+                    <li><code>{name}</code> - имя пользователя (если доступно)</li>
+                    <li><code>{username}</code> - username Telegram (если доступно)</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-eye me-2"></i>Предварительный просмотр</h5>
+            </div>
+            <div class="card-body">
+                <div class="chat-preview p-3 bg-light rounded">
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-robot text-primary me-2 mt-1"></i>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold text-primary mb-1">Ваш бот</div>
+                            <div id="previewText">{{ settings.welcome_message }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const defaultMessage = "Привет! Я помогу вам создать идеального Telegram-бота для вашего бизнеса. Расскажите, что вас интересует?";
+
+// Обновление предварительного просмотра в реальном времени
+document.getElementById('welcome_message').addEventListener('input', function() {
+    const previewText = document.getElementById('previewText');
+    previewText.textContent = this.value || defaultMessage;
+});
+
+// Сброс к стандартному сообщению
+function resetToDefault() {
+    if (confirm('Вы уверены, что хотите сбросить приветственное сообщение к стандартному?')) {
+        document.getElementById('welcome_message').value = defaultMessage;
+        document.getElementById('previewText').textContent = defaultMessage;
+    }
+}
+
+// Автосохранение (опционально)
+let saveTimeout;
+document.getElementById('welcome_message').addEventListener('input', function() {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+        // Здесь можно добавить автосохранение через AJAX
+        console.log('Автосохранение...');
+    }, 2000);
+});
+</script>
+{% endblock %} 

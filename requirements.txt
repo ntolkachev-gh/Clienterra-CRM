@@ -1,0 +1,16 @@
+flask==2.3.3
+flask-sqlalchemy==3.0.5
+flask-login==0.6.3
+flask-wtf==1.1.1
+wtforms==3.0.1
+python-telegram-bot==20.6
+openai==0.28.1
+qdrant-client==1.6.4
+psycopg2-binary==2.9.7
+python-dotenv==1.0.0
+asyncpg==0.29.0
+gunicorn==21.2.0
+bcrypt==4.0.1
+requests==2.31.0
+pillow==10.0.1
+werkzeug==2.3.7 

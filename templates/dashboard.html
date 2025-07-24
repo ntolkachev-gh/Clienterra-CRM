@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Дашборд - Clienterra CRM{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-dashboard me-2"></i>Дашборд</h1>
+    <div class="d-flex gap-2">
+        <input type="text" id="searchInput" class="form-control" placeholder="Поиск по клиентам..." style="width: 300px;">
+        <select id="statusFilter" class="form-select" style="width: 150px;">
+            <option value="">Все статусы</option>
+            <option value="новый">Новый</option>
+            <option value="в работе">В работе</option>
+            <option value="завершён">Завершён</option>
+        </select>
+    </div>
+</div>
+
+<!-- Статистика -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ clients|length }}</h4>
+                        <p class="mb-0">Всего клиентов</p>
+                    </div>
+                    <i class="fas fa-users fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ clients|selectattr('status', 'equalto', 'новый')|list|length }}</h4>
+                        <p class="mb-0">Новые лиды</p>
+                    </div>
+                    <i class="fas fa-star fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ clients|selectattr('status', 'equalto', 'в работе')|list|length }}</h4>
+                        <p class="mb-0">В работе</p>
+                    </div>
+                    <i class="fas fa-cogs fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ clients|selectattr('status', 'equalto', 'завершён')|list|length }}</h4>
+                        <p class="mb-0">Завершённые</p>
+                    </div>
+                    <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Таблица клиентов -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-table me-2"></i>Список клиентов</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="clientsTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Имя</th>
+                        <th>Организация</th>
+                        <th>Telegram ID</th>
+                        <th>Статус</th>
+                        <th>Создан</th>
+                        <th>Последняя активность</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in clients %}
+                    <tr data-status="{{ client.status }}">
+                        <td>{{ client.id }}</td>
+                        <td>
+                            {% if client.name %}
+                                {{ client.name }}
+                            {% else %}
+                                <span class="text-muted">Не указано</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if client.organization %}
+                                {{ client.organization }}
+                            {% else %}
+                                <span class="text-muted">Не указано</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <code>{{ client.telegram_id }}</code>
+                        </td>
+                        <td>
+                            <select class="form-select form-select-sm status-select" data-client-id="{{ client.id }}">
+                                <option value="новый" {% if client.status == 'новый' %}selected{% endif %}>Новый</option>
+                                <option value="в работе" {% if client.status == 'в работе' %}selected{% endif %}>В работе</option>
+                                <option value="завершён" {% if client.status == 'завершён' %}selected{% endif %}>Завершён</option>
+                            </select>
+                        </td>
+                        <td>
+                            <small>{{ client.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                        </td>
+                        <td>
+                            <small>{{ client.updated_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('client_detail', client_id=client.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> Подробнее
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                            Клиентов пока нет
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Поиск по таблице
+document.getElementById('searchInput').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#clientsTable tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+
+// Фильтр по статусу
+document.getElementById('statusFilter').addEventListener('change', function() {
+    const selectedStatus = this.value;
+    const rows = document.querySelectorAll('#clientsTable tbody tr');
+    
+    rows.forEach(row => {
+        const status = row.getAttribute('data-status');
+        row.style.display = !selectedStatus || status === selectedStatus ? '' : 'none';
+    });
+});
+
+// Обновление статуса клиента
+document.querySelectorAll('.status-select').forEach(select => {
+    select.addEventListener('change', function() {
+        const clientId = this.getAttribute('data-client-id');
+        const newStatus = this.value;
+        
+        fetch('/update_client_status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                client_id: clientId,
+                status: newStatus
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Обновляем атрибут data-status для фильтрации
+                this.closest('tr').setAttribute('data-status', newStatus);
+                
+                // Показываем уведомление
+                showNotification('Статус клиента обновлён', 'success');
+            } else {
+                showNotification('Ошибка при обновлении статуса', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Ошибка при обновлении статуса', 'error');
+        });
+    });
+});
+
+function showNotification(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+</script>
+{% endblock %} 

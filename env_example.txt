@@ -1,0 +1,20 @@
+# Конфигурация базы данных
+DATABASE_URL=postgresql://username:password@localhost:5432/clienterra_crm
+
+# Секретный ключ Flask
+SECRET_KEY=your-very-secret-key-here
+
+# Telegram Bot API
+TELEGRAM_BOT_TOKEN=your-bot-token-here
+
+# OpenAI API
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Qdrant Vector Database
+QDRANT_URL=http://localhost:6333
+
+# Режим разработки (true/false)
+DEBUG=false
+
+# Порт для веб-приложения
+PORT=5000 
