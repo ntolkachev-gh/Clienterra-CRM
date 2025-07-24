@@ -21,6 +21,23 @@ body {
     color: var(--ocean-text);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+/* Полноэкранные контейнеры */
+.container-fluid {
+    width: 100%;
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+/* Убираем лишние отступы */
+main.container-fluid {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    margin-top: 1rem;
 }
 
 /* Навигация */
@@ -319,7 +336,31 @@ body {
 }
 
 /* Адаптивность */
+@media (max-width: 1200px) {
+    .container {
+        max-width: 100% !important;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .row {
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+    }
+    
+    .col-md-3, .col-lg-3 {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+}
+
 @media (max-width: 768px) {
+    .container {
+        max-width: 100% !important;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
     .d-flex.gap-2 {
         flex-direction: column;
         gap: 0.75rem !important;
@@ -350,6 +391,91 @@ body {
         font-size: 1.5rem;
         top: 0.5rem;
         right: 0.5rem;
+    }
+    
+    /* Навигация на мобильных */
+    .navbar-nav {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .navbar-nav .nav-link {
+        padding: 0.75rem 1rem;
+        margin: 0.25rem 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        max-width: 100% !important;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .stats-card {
+        padding: 0.75rem;
+        min-height: 80px;
+    }
+    
+    .stats-card h4 {
+        font-size: 1.25rem;
+    }
+    
+    .stats-card p {
+        font-size: 0.75rem;
+    }
+    
+    .stats-card i {
+        font-size: 1.25rem;
+        top: 0.5rem;
+        right: 0.5rem;
+    }
+}
+
+/* Полноэкранный режим для больших экранов */
+@media (min-width: 1400px) {
+    .container {
+        max-width: 100% !important;
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+    
+    .row {
+        margin-left: -1rem;
+        margin-right: -1rem;
+    }
+    
+    .col-md-3, .col-lg-3 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .stats-card {
+        padding: 1.5rem;
+        min-height: 140px;
+    }
+    
+    .stats-card h4 {
+        font-size: 2rem;
+    }
+    
+    .stats-card i {
+        font-size: 2.5rem;
     }
 }
 
