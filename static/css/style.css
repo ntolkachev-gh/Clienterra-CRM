@@ -29,14 +29,14 @@ body {
 .container-fluid {
     width: 100%;
     max-width: 100%;
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
 }
 
 /* Убираем лишние отступы */
 main.container-fluid {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
     margin-top: 1rem;
 }
 
@@ -404,8 +404,18 @@ main.container-fluid {
 @media (max-width: 1200px) {
     .container {
         max-width: 100% !important;
-        padding-left: 1rem;
-        padding-right: 1rem;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+    
+    .container-fluid {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+    
+    main.container-fluid {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
     }
     
     .row {
@@ -422,8 +432,18 @@ main.container-fluid {
 @media (max-width: 768px) {
     .container {
         max-width: 100% !important;
-        padding-left: 0.75rem;
-        padding-right: 0.75rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .container-fluid {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    main.container-fluid {
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
     
     .d-flex.gap-2 {
@@ -558,8 +578,18 @@ main.container-fluid {
 @media (max-width: 576px) {
     .container {
         max-width: 100% !important;
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    .container-fluid {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    main.container-fluid {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
     }
     
     .card {
@@ -627,8 +657,18 @@ main.container-fluid {
 @media (min-width: 1400px) {
     .container {
         max-width: 100% !important;
-        padding-left: 2rem;
-        padding-right: 2rem;
+        padding-left: 3rem;
+        padding-right: 3rem;
+    }
+    
+    .container-fluid {
+        padding-left: 3rem;
+        padding-right: 3rem;
+    }
+    
+    main.container-fluid {
+        padding-left: 3rem;
+        padding-right: 3rem;
     }
     
     .row {
