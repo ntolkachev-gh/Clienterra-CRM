@@ -14,7 +14,7 @@ OPENAI_API_KEY=your-openai-api-key-here
 QDRANT_URL=http://localhost:6333
 
 # N8N Webhook Integration
-N8N_WEBHOOK_URL=https://your-n8n-instance.com/webhook/your-webhook-id
+N8N_WEBHOOK_URL=https://n8n.tech.ai-community.com/webhook/text-from-user
 
 # Режим разработки (true/false)
 DEBUG=false
