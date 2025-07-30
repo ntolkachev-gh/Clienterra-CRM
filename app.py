@@ -41,6 +41,7 @@ class Client(db.Model):
     name = db.Column(db.String(100))
     organization = db.Column(db.String(200))
     project_description = db.Column(db.Text)
+    user_brief = db.Column(db.Text(length=10000))  # Сырой бриф от пользователя (очень большое поле)
     required_functions = db.Column(db.Text)
     traffic_source = db.Column(db.String(100))
     status = db.Column(db.String(50), default='новый')
@@ -115,6 +116,71 @@ def update_client_status():
         return jsonify({'success': True})
     
     return jsonify({'success': False}), 404
+
+@app.route('/api/save_final_message', methods=['POST'])
+def save_final_message():
+    """API endpoint для сохранения финального сообщения пользователя от n8n"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Извлекаем данные из запроса
+        user_data = data.get('user', {})
+        message_data = data.get('message', {})
+        metadata = data.get('metadata', {})
+        
+        telegram_id = user_data.get('telegram_id')
+        message_text = message_data.get('text')
+        is_first_message = metadata.get('is_first_message', False)
+        
+        if not telegram_id or not message_text:
+            return jsonify({'error': 'Missing required fields: telegram_id or message text'}), 400
+        
+        # Ищем или создаем клиента
+        client = Client.query.filter_by(telegram_id=telegram_id).first()
+        
+        if not client:
+            # Создаем нового клиента
+            client = Client(
+                telegram_id=telegram_id,
+                name=f"{user_data.get('first_name', '')} {user_data.get('last_name', '')}".strip(),
+                status='новый'
+            )
+            db.session.add(client)
+            db.session.flush()  # Получаем ID клиента
+        
+        # Если это первое сообщение, сохраняем его как user_brief (сырой бриф)
+        if is_first_message:
+            client.user_brief = message_text
+            client.updated_at = datetime.utcnow()
+        
+        # Сохраняем сообщение в таблицу messages
+        message = Message(
+            client_id=client.id,
+            message_text=message_text,
+            is_from_bot=False,
+            timestamp=datetime.fromisoformat(message_data.get('timestamp', datetime.utcnow().isoformat()))
+        )
+        db.session.add(message)
+        
+        # Обновляем статус клиента если это первое сообщение
+        if is_first_message:
+            client.status = 'в работе'
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'client_id': client.id,
+            'message_id': message.id,
+            'is_first_message': is_first_message
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required

@@ -80,6 +80,32 @@
             </div>
         </div>
 
+        <!-- Бриф от пользователя -->
+        {% if client.user_brief %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title">
+                    <i class="fas fa-comment-dots me-3"></i>Бриф от пользователя
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Сырая информация от клиента:</strong>
+                </div>
+                <div class="user-brief-content" style="max-height: 300px; overflow-y: auto;">
+                    <p class="mb-0" style="white-space: pre-wrap; word-wrap: break-word;">{{ client.user_brief }}</p>
+                </div>
+                <div class="mt-2">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Длина: {{ client.user_brief|length }} символов
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Описание проекта -->
         {% if client.project_description %}
         <div class="card mb-4">
