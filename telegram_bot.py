@@ -33,6 +33,7 @@ class TelegramBot:
         self.qdrant_client = QdrantClient(url=QDRANT_URL)
         self.collection_name = "knowledge_base"
         self.db_pool = None
+        self.qdrant_available = False  # Будет установлено в True при успешной инициализации
         
     async def init_db_pool(self):
         """Инициализация пула подключений к базе данных"""
@@ -59,6 +60,10 @@ class TelegramBot:
                 
         except Exception as e:
             logger.error(f"Ошибка настройки Qdrant: {e}")
+            logger.warning("Бот будет работать без базы знаний Qdrant")
+            self.qdrant_available = False
+        else:
+            self.qdrant_available = True
     
     async def populate_knowledge_base(self):
         """Заполнение базы знаний информацией об услугах"""
@@ -127,6 +132,14 @@ class TelegramBot:
     
     async def search_knowledge(self, query: str, limit: int = 3) -> List[str]:
         """Поиск релевантной информации в базе знаний"""
+        if not self.qdrant_available:
+            logger.warning("Qdrant недоступен, возвращаем базовую информацию")
+            return [
+                "Мы создаем Telegram-ботов для автоматизации бизнес-процессов: прием заказов, консультации клиентов, запись на услуги, уведомления о статусе заказов.",
+                "Интеграция с CRM системами, базами данных, платежными системами (Stripe, ЮKassa), API сторонних сервисов для полной автоматизации бизнеса.",
+                "Боты для интернет-магазинов: каталог товаров, корзина, оформление заказов, отслеживание доставки, система лояльности и скидок."
+            ]
+        
         try:
             # Получаем эмбеддинг запроса
             response = await asyncio.to_thread(
@@ -148,7 +161,11 @@ class TelegramBot:
             
         except Exception as e:
             logger.error(f"Ошибка поиска в базе знаний: {e}")
-            return []
+            return [
+                "Мы создаем Telegram-ботов для автоматизации бизнес-процессов: прием заказов, консультации клиентов, запись на услуги, уведомления о статусе заказов.",
+                "Интеграция с CRM системами, базами данных, платежными системами (Stripe, ЮKassa), API сторонних сервисов для полной автоматизации бизнеса.",
+                "Боты для интернет-магазинов: каталог товаров, корзина, оформление заказов, отслеживание доставки, система лояльности и скидок."
+            ]
     
     async def get_openai_response(self, user_message: str, context: List[str]) -> str:
         """Генерация ответа через OpenAI с контекстом из базы знаний"""
@@ -291,4 +308,18 @@ async def main():
     await application.run_polling()
 
 if __name__ == '__main__':
-    asyncio.run(main()) 
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("Бот остановлен пользователем")
+    except Exception as e:
+        logger.error(f"Ошибка запуска бота: {e}")
+        # Альтернативный способ запуска
+        try:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(main())
+        except Exception as e2:
+            logger.error(f"Критическая ошибка: {e2}")
+        finally:
+            loop.close() 
