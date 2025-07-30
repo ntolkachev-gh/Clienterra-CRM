@@ -204,6 +204,64 @@ def settings():
     
     return render_template('settings.html', settings=bot_settings)
 
+@app.route('/api/add_brief', methods=['POST'])
+def add_brief():
+    """Упрощенный API endpoint для добавления брифа - только telegram_id и text"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        telegram_id = data.get('telegram_id')
+        text = data.get('text')
+        
+        if not telegram_id or not text:
+            return jsonify({'error': 'Missing required fields: telegram_id or text'}), 400
+        
+        # Ищем или создаем клиента
+        client = Client.query.filter_by(telegram_id=telegram_id).first()
+        
+        if not client:
+            # Создаем нового клиента
+            client = Client(
+                telegram_id=telegram_id,
+                name="Пользователь",
+                status='новый'
+            )
+            db.session.add(client)
+            db.session.flush()
+        
+        # Дополняем user_brief
+        if client.user_brief:
+            client.user_brief += f"\n\n--- Новое сообщение ---\n{text}"
+        else:
+            client.user_brief = text
+        
+        client.updated_at = datetime.utcnow()
+        client.status = 'в работе'
+        
+        # Сохраняем сообщение в таблицу messages
+        message = Message(
+            client_id=client.id,
+            message_text=text,
+            is_from_bot=False,
+            timestamp=datetime.utcnow()
+        )
+        db.session.add(message)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'client_id': client.id,
+            'message_id': message.id
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 def create_admin_user():
     """Создает администратора по умолчанию если его нет"""
     if not User.query.first():
