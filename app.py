@@ -262,6 +262,51 @@ def add_brief():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/get_brief/<int:telegram_id>', methods=['GET'])
+def get_brief_by_telegram_id(telegram_id):
+    """API endpoint для получения полного брифа по Telegram ID"""
+    try:
+        # Ищем клиента по telegram_id
+        client = Client.query.filter_by(telegram_id=telegram_id).first()
+        
+        if not client:
+            return jsonify({'error': 'Client not found'}), 404
+        
+        # Получаем все сообщения клиента
+        messages = Message.query.filter_by(client_id=client.id).order_by(Message.timestamp.asc()).all()
+        
+        # Формируем полный бриф
+        full_brief = {
+            'client_info': {
+                'id': client.id,
+                'telegram_id': client.telegram_id,
+                'name': client.name,
+                'organization': client.organization,
+                'status': client.status,
+                'created_at': client.created_at.isoformat() if client.created_at else None,
+                'updated_at': client.updated_at.isoformat() if client.updated_at else None
+            },
+            'user_brief': client.user_brief,
+            'project_description': client.project_description,
+            'required_functions': client.required_functions,
+            'traffic_source': client.traffic_source,
+            'messages': [
+                {
+                    'id': msg.id,
+                    'text': msg.message_text,
+                    'is_from_bot': msg.is_from_bot,
+                    'timestamp': msg.timestamp.isoformat() if msg.timestamp else None,
+                    'attachment_path': msg.attachment_path
+                }
+                for msg in messages
+            ]
+        }
+        
+        return jsonify(full_brief)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 def create_admin_user():
     """Создает администратора по умолчанию если его нет"""
     if not User.query.first():
