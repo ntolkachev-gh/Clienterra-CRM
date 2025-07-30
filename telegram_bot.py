@@ -309,17 +309,16 @@ async def main():
 
 if __name__ == '__main__':
     try:
-        asyncio.run(main())
+        # Используем более простой способ запуска
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(main())
     except KeyboardInterrupt:
         logger.info("Бот остановлен пользователем")
     except Exception as e:
-        logger.error(f"Ошибка запуска бота: {e}")
-        # Альтернативный способ запуска
+        logger.error(f"Критическая ошибка запуска бота: {e}")
+    finally:
         try:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(main())
-        except Exception as e2:
-            logger.error(f"Критическая ошибка: {e2}")
-        finally:
-            loop.close() 
+            loop.close()
+        except:
+            pass 
