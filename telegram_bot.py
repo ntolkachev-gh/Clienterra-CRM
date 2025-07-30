@@ -328,14 +328,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Сохраняем ответ бота
     await bot_instance.save_message_to_db(user_id, bot_response, is_from_bot=True)
 
-async def main():
+def main():
     """Основная функция запуска бота"""
     global bot_instance
     bot_instance = TelegramBot()
-    
-    # Инициализация
-    await bot_instance.init_db_pool()
-    await bot_instance.setup_qdrant_collection()
     
     # Создание приложения
     application = Application.builder().token(TELEGRAM_TOKEN).build()
@@ -344,14 +340,49 @@ async def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     
-    # Запуск бота
     logger.info("Бот запущен!")
-    await application.run_polling()
-
-if __name__ == '__main__':
+    
+    # Запуск бота с инициализацией
+    async def initialize_and_run():
+        try:
+            await bot_instance.init_db_pool()
+            await bot_instance.setup_qdrant_collection()
+            await application.initialize()
+            await application.start()
+            await application.updater.start_polling()
+            
+            # Ждем бесконечно
+            while True:
+                await asyncio.sleep(1)
+        except KeyboardInterrupt:
+            logger.info("Получен сигнал остановки")
+        finally:
+            try:
+                await application.updater.stop()
+                await application.stop()
+                await application.shutdown()
+                if bot_instance.db_pool:
+                    await bot_instance.db_pool.close()
+            except Exception as e:
+                logger.error(f"Ошибка при остановке: {e}")
+    
+    # Используем простой event loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
     try:
-        asyncio.run(main())
+        loop.run_until_complete(initialize_and_run())
     except KeyboardInterrupt:
         logger.info("Бот остановлен пользователем")
     except Exception as e:
-        logger.error(f"Ошибка запуска бота: {e}") 
+        logger.error(f"Ошибка запуска бота: {e}")
+    finally:
+        try:
+            # Закрываем loop только если он не закрыт
+            if not loop.is_closed():
+                loop.close()
+        except Exception:
+            pass
+
+if __name__ == '__main__':
+    main() 
