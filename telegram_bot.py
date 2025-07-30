@@ -4,12 +4,19 @@ import logging
 from datetime import datetime
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct
 from dotenv import load_dotenv
 import asyncio
 import asyncpg
 from typing import List, Dict, Any
+
+# Try to import Qdrant, but don't fail if it's not available
+try:
+    from qdrant_client import QdrantClient
+    from qdrant_client.models import Distance, VectorParams, PointStruct
+    QDRANT_AVAILABLE = True
+except ImportError:
+    QDRANT_AVAILABLE = False
+    logger.warning("Qdrant client недоступен")
 
 # Настройка логирования
 logging.basicConfig(
@@ -23,24 +30,47 @@ load_dotenv()
 # Конфигурация
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-QDRANT_URL = os.getenv('QDRANT_URL', 'http://localhost:6333')
+QDRANT_URL = os.getenv('QDRANT_URL')
+QDRANT_API_KEY = os.getenv('QDRANT_API_KEY')
 DATABASE_URL = os.getenv('DATABASE_URL')
 
-openai.api_key = OPENAI_API_KEY
+# Set OpenAI API key
+if OPENAI_API_KEY:
+    openai.api_key = OPENAI_API_KEY
 
 class TelegramBot:
     def __init__(self):
-        self.qdrant_client = QdrantClient(url=QDRANT_URL)
+        self.qdrant_client = None
         self.collection_name = "knowledge_base"
         self.db_pool = None
-        self.qdrant_available = False  # Будет установлено в True при успешной инициализации
+        self.qdrant_available = False
+        
+        # Initialize Qdrant if available and configured
+        if QDRANT_AVAILABLE and QDRANT_URL:
+            try:
+                if QDRANT_API_KEY:
+                    self.qdrant_client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
+                else:
+                    self.qdrant_client = QdrantClient(url=QDRANT_URL)
+                logger.info("Qdrant client инициализирован")
+            except Exception as e:
+                logger.warning(f"Не удалось инициализировать Qdrant: {e}")
         
     async def init_db_pool(self):
         """Инициализация пула подключений к базе данных"""
-        self.db_pool = await asyncpg.create_pool(DATABASE_URL)
+        if DATABASE_URL:
+            try:
+                self.db_pool = await asyncpg.create_pool(DATABASE_URL)
+                logger.info("Подключение к базе данных установлено")
+            except Exception as e:
+                logger.error(f"Ошибка подключения к БД: {e}")
         
     async def setup_qdrant_collection(self):
         """Настройка коллекции в Qdrant"""
+        if not self.qdrant_client:
+            logger.warning("Qdrant недоступен")
+            return
+            
         try:
             collections = await asyncio.to_thread(self.qdrant_client.get_collections)
             collection_names = [col.name for col in collections.collections]
@@ -52,21 +82,22 @@ class TelegramBot:
                     vectors_config=VectorParams(size=1536, distance=Distance.COSINE)
                 )
                 logger.info(f"Создана коллекция {self.collection_name}")
-                
-                # Добавляем базовые знания о услугах
                 await self.populate_knowledge_base()
             else:
                 logger.info(f"Коллекция {self.collection_name} уже существует")
+                
+            self.qdrant_available = True
                 
         except Exception as e:
             logger.error(f"Ошибка настройки Qdrant: {e}")
             logger.warning("Бот будет работать без базы знаний Qdrant")
             self.qdrant_available = False
-        else:
-            self.qdrant_available = True
     
     async def populate_knowledge_base(self):
         """Заполнение базы знаний информацией об услугах"""
+        if not OPENAI_API_KEY or not self.qdrant_client:
+            return
+            
         knowledge_items = [
             {
                 "id": 1,
@@ -102,7 +133,7 @@ class TelegramBot:
         
         for item in knowledge_items:
             try:
-                # Получаем эмбеддинг от OpenAI
+                # Получаем эмбеддинг от OpenAI (старый API)
                 response = await asyncio.to_thread(
                     openai.Embedding.create,
                     input=item["text"],
@@ -132,16 +163,19 @@ class TelegramBot:
     
     async def search_knowledge(self, query: str, limit: int = 3) -> List[str]:
         """Поиск релевантной информации в базе знаний"""
-        if not self.qdrant_available:
-            logger.warning("Qdrant недоступен, возвращаем базовую информацию")
-            return [
-                "Мы создаем Telegram-ботов для автоматизации бизнес-процессов: прием заказов, консультации клиентов, запись на услуги, уведомления о статусе заказов.",
-                "Интеграция с CRM системами, базами данных, платежными системами (Stripe, ЮKassa), API сторонних сервисов для полной автоматизации бизнеса.",
-                "Боты для интернет-магазинов: каталог товаров, корзина, оформление заказов, отслеживание доставки, система лояльности и скидок."
-            ]
+        # Fallback knowledge base
+        fallback_knowledge = [
+            "Мы создаем Telegram-ботов для автоматизации бизнес-процессов: прием заказов, консультации клиентов, запись на услуги, уведомления о статусе заказов.",
+            "Интеграция с CRM системами, базами данных, платежными системами (Stripe, ЮKassa), API сторонних сервисов для полной автоматизации бизнеса.",
+            "Боты для интернет-магазинов: каталог товаров, корзина, оформление заказов, отслеживание доставки, система лояльности и скидок."
+        ]
+        
+        if not self.qdrant_available or not OPENAI_API_KEY:
+            logger.warning("Qdrant или OpenAI недоступен, возвращаем базовую информацию")
+            return fallback_knowledge
         
         try:
-            # Получаем эмбеддинг запроса
+            # Получаем эмбеддинг запроса (старый API)
             response = await asyncio.to_thread(
                 openai.Embedding.create,
                 input=query,
@@ -161,14 +195,13 @@ class TelegramBot:
             
         except Exception as e:
             logger.error(f"Ошибка поиска в базе знаний: {e}")
-            return [
-                "Мы создаем Telegram-ботов для автоматизации бизнес-процессов: прием заказов, консультации клиентов, запись на услуги, уведомления о статусе заказов.",
-                "Интеграция с CRM системами, базами данных, платежными системами (Stripe, ЮKassa), API сторонних сервисов для полной автоматизации бизнеса.",
-                "Боты для интернет-магазинов: каталог товаров, корзина, оформление заказов, отслеживание доставки, система лояльности и скидок."
-            ]
+            return fallback_knowledge
     
     async def get_openai_response(self, user_message: str, context: List[str]) -> str:
         """Генерация ответа через OpenAI с контекстом из базы знаний"""
+        if not OPENAI_API_KEY:
+            return "Извините, сервис временно недоступен. Пожалуйста, свяжитесь с нашим менеджером напрямую."
+            
         try:
             context_text = "\n".join(context) if context else "Информация о наших услугах недоступна."
             
@@ -189,6 +222,7 @@ class TelegramBot:
                 {"role": "user", "content": f"Контекст о наших услугах:\n{context_text}\n\nСообщение клиента: {user_message}"}
             ]
             
+            # Используем старый API OpenAI
             response = await asyncio.to_thread(
                 openai.ChatCompletion.create,
                 model="gpt-4",
@@ -205,6 +239,10 @@ class TelegramBot:
     
     async def save_message_to_db(self, telegram_id: int, message_text: str, is_from_bot: bool = False):
         """Сохранение сообщения в базу данных"""
+        if not self.db_pool:
+            logger.warning("База данных недоступна")
+            return
+            
         try:
             async with self.db_pool.acquire() as conn:
                 # Проверяем, существует ли клиент
@@ -239,6 +277,9 @@ class TelegramBot:
     
     async def get_welcome_message(self) -> str:
         """Получение приветственного сообщения из настроек"""
+        if not self.db_pool:
+            return "Привет! Я помогу вам создать идеального Telegram-бота для вашего бизнеса. Расскажите, что вас интересует?"
+            
         try:
             async with self.db_pool.acquire() as conn:
                 result = await conn.fetchrow("SELECT welcome_message FROM bot_settings LIMIT 1")
@@ -309,16 +350,8 @@ async def main():
 
 if __name__ == '__main__':
     try:
-        # Используем более простой способ запуска
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(main())
+        asyncio.run(main())
     except KeyboardInterrupt:
         logger.info("Бот остановлен пользователем")
     except Exception as e:
-        logger.error(f"Критическая ошибка запуска бота: {e}")
-    finally:
-        try:
-            loop.close()
-        except:
-            pass 
+        logger.error(f"Ошибка запуска бота: {e}") 
