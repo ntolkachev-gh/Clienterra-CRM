@@ -151,10 +151,15 @@ def save_final_message():
             db.session.add(client)
             db.session.flush()  # Получаем ID клиента
         
-        # Если это первое сообщение, сохраняем его как user_brief (сырой бриф)
-        if is_first_message:
+        # Дополняем user_brief каждым новым сообщением
+        if client.user_brief:
+            # Если уже есть данные, добавляем новое сообщение с разделителем
+            client.user_brief += f"\n\n--- Новое сообщение ---\n{message_text}"
+        else:
+            # Если это первое сообщение, создаем новый бриф
             client.user_brief = message_text
-            client.updated_at = datetime.utcnow()
+        
+        client.updated_at = datetime.utcnow()
         
         # Сохраняем сообщение в таблицу messages
         message = Message(
