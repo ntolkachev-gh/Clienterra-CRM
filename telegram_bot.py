@@ -275,25 +275,51 @@ class TelegramBot:
         except Exception as e:
             logger.error(f"Ошибка сохранения в БД: {e}")
     
-    async def get_welcome_message(self) -> str:
+    async def get_welcome_message(self, user_info: dict = None) -> str:
         """Получение приветственного сообщения из настроек"""
         if not self.db_pool:
-            return "Привет! Я помогу вам создать идеального Telegram-бота для вашего бизнеса. Расскажите, что вас интересует?"
-            
-        try:
-            async with self.db_pool.acquire() as conn:
-                result = await conn.fetchrow("SELECT welcome_message FROM bot_settings LIMIT 1")
-                if result:
-                    return result['welcome_message']
-        except Exception as e:
-            logger.error(f"Ошибка получения настроек: {e}")
+            message = "Привет! Я помогу вам создать идеального Telegram-бота для вашего бизнеса. Расскажите, что вас интересует?"
+        else:
+            try:
+                async with self.db_pool.acquire() as conn:
+                    result = await conn.fetchrow("SELECT welcome_message FROM bot_settings LIMIT 1")
+                    if result:
+                        message = result['welcome_message']
+                    else:
+                        message = "Привет! Я помогу вам создать идеального Telegram-бота для вашего бизнеса. Расскажите, что вас интересует?"
+            except Exception as e:
+                logger.error(f"Ошибка получения настроек: {e}")
+                message = "Привет! Я помогу вам создать идеального Telegram-бота для вашего бизнеса. Расскажите, что вас интересует?"
         
-        return "Привет! Я помогу вам создать идеального Telegram-бота для вашего бизнеса. Расскажите, что вас интересует?"
+        # Заменяем плейсхолдеры на реальные данные пользователя
+        if user_info:
+            if user_info.get('first_name'):
+                message = message.replace('{name}', user_info['first_name'])
+            else:
+                message = message.replace('{name}', 'пользователь')
+                
+            if user_info.get('username'):
+                message = message.replace('{username}', f"@{user_info['username']}")
+            else:
+                message = message.replace('{username}', 'пользователь')
+        else:
+            # Если нет информации о пользователе, заменяем на общие значения
+            message = message.replace('{name}', 'пользователь')
+            message = message.replace('{username}', 'пользователь')
+        
+        return message
 
 # Обработчики команд
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик команды /start"""
-    welcome_message = await bot_instance.get_welcome_message()
+    # Получаем информацию о пользователе
+    user = update.effective_user
+    user_info = {
+        'first_name': user.first_name,
+        'username': user.username
+    }
+    
+    welcome_message = await bot_instance.get_welcome_message(user_info)
     await update.message.reply_text(welcome_message)
     
     # Сохраняем команду в БД
