@@ -2,8 +2,8 @@ import os
 import openai
 import logging
 from datetime import datetime
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 from dotenv import load_dotenv
 import asyncio
 import asyncpg
@@ -480,6 +480,62 @@ class TelegramBot:
             logger.error(f"Ошибка проверки первого сообщения после приветствия: {e}")
             return False
 
+    async def send_follow_up_question(self, chat_id: int, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Отправляет вопрос о дополнительной информации с inline кнопками"""
+        keyboard = [
+            [
+                InlineKeyboardButton("Да, есть что рассказать", callback_data="more_info"),
+                InlineKeyboardButton("Нет, можно формировать предложение", callback_data="ready_for_proposal")
+            ]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        
+        message_text = "🤔 Есть ли у вас что-то еще рассказать, или можно формировать итоговое предложение?"
+        
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text=message_text,
+            reply_markup=reply_markup
+        )
+        
+        # Сохраняем сообщение бота в БД
+        await self.save_message_to_db(chat_id, message_text, is_from_bot=True)
+
+    async def handle_user_choice(self, user_id: int, choice: str, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Обрабатывает выбор пользователя"""
+        if choice == "more_info":
+            message_text = "👍 Отлично! Расскажите подробнее о ваших потребностях. Это поможет нам создать более точное предложение."
+        elif choice == "ready_for_proposal":
+            message_text = "🎯 Понятно! Сейчас мы проанализируем всю информацию и подготовим для вас персональное предложение. Это займет несколько минут."
+        else:
+            message_text = "Извините, произошла ошибка. Попробуйте еще раз."
+        
+        await context.bot.send_message(
+            chat_id=user_id,
+            text=message_text
+        )
+        
+        # Сохраняем ответ бота в БД
+        await self.save_message_to_db(user_id, message_text, is_from_bot=True)
+        
+        # Отправляем webhook в n8n с информацией о выборе пользователя
+        user_info = {
+            "telegram_id": user_id,
+            "first_name": "Пользователь",
+            "last_name": "",
+            "username": ""
+        }
+        
+        message_data = {
+            "text": f"Пользователь выбрал: {choice}",
+            "message_type": "choice",
+            "timestamp": datetime.utcnow().isoformat(),
+            "message_id": 0,
+            "user_choice": choice
+        }
+        
+        await self.send_n8n_webhook(user_info, message_data)
+
 # Обработчики команд
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик команды /start"""
@@ -553,7 +609,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         logger.warning(f"Не удалось отправить сообщение пользователя {user_id} в n8n")
     
-    # Больше не отвечаем стандартным способом - все обрабатывает n8n
+    # Отправляем follow-up вопрос с inline кнопками
+    await bot_instance.send_follow_up_question(user_id, context)
+    
     return
 
 async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -602,8 +660,24 @@ async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         logger.warning(f"Не удалось отправить голосовое сообщение пользователя {user_id} в n8n")
     
-    # Больше не отвечаем стандартным способом - все обрабатывает n8n
+    # Отправляем follow-up вопрос с inline кнопками
+    await bot_instance.send_follow_up_question(user_id, context)
+    
     return
+
+async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик нажатий на inline кнопки"""
+    query = update.callback_query
+    user_id = query.from_user.id
+    choice = query.data
+    
+    logger.info(f"Пользователь {user_id} выбрал: {choice}")
+    
+    # Отвечаем на callback query (убираем "часики" у кнопки)
+    await query.answer()
+    
+    # Обрабатываем выбор пользователя
+    await bot_instance.handle_user_choice(user_id, choice, context)
 
 def main():
     """Основная функция запуска бота"""
@@ -617,6 +691,7 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_handler(MessageHandler(filters.VOICE, handle_voice))
+    application.add_handler(CallbackQueryHandler(handle_callback_query))
     
     logger.info("Бот запущен!")
     
