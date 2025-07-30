@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 import asyncio
 import asyncpg
 from typing import List, Dict, Any
+import aiohttp
+import json
 
 # Try to import Qdrant, but don't fail if it's not available
 try:
@@ -33,6 +35,7 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 QDRANT_URL = os.getenv('QDRANT_URL')
 QDRANT_API_KEY = os.getenv('QDRANT_API_KEY')
 DATABASE_URL = os.getenv('DATABASE_URL')
+N8N_WEBHOOK_URL = os.getenv('N8N_WEBHOOK_URL')
 
 # Set OpenAI API key
 if OPENAI_API_KEY:
@@ -309,6 +312,147 @@ class TelegramBot:
         
         return message
 
+    async def send_welcome_if_new_user(self, update: Update) -> bool:
+        """Отправляет приветствие если пользователь новый"""
+        user_id = update.effective_user.id
+        user = update.effective_user
+        
+        # Проверяем, новый ли пользователь
+        is_new = await self.is_new_user(user_id)
+        
+        if is_new:
+            # Получаем информацию о пользователе для персонализации
+            user_info = {
+                'first_name': user.first_name,
+                'username': user.username
+            }
+            
+            # Получаем персонализированное приветственное сообщение
+            welcome_message = await self.get_welcome_message(user_info)
+            
+            # Отправляем приветствие
+            await update.message.reply_text(welcome_message)
+            
+            # Сохраняем приветствие в БД
+            await self.save_message_to_db(user_id, welcome_message, is_from_bot=True)
+            
+            logger.info(f"Отправлено автоматическое приветствие пользователю {user_id}")
+            return True
+        
+        return False
+
+    async def send_n8n_webhook(self, user_info: dict, message_data: dict) -> bool:
+        """Отправка webhook на n8n с данными пользователя и сообщения"""
+        if not N8N_WEBHOOK_URL:
+            logger.warning("N8N_WEBHOOK_URL не настроен")
+            return False
+            
+        try:
+            # Подготавливаем данные для отправки
+            webhook_data = {
+                "user": {
+                    "telegram_id": user_info.get("telegram_id"),
+                    "first_name": user_info.get("first_name"),
+                    "last_name": user_info.get("last_name"),
+                    "username": user_info.get("username"),
+                    "language_code": user_info.get("language_code")
+                },
+                "message": {
+                    "text": message_data.get("text"),
+                    "message_type": message_data.get("message_type", "text"),
+                    "timestamp": message_data.get("timestamp"),
+                    "message_id": message_data.get("message_id")
+                },
+                "metadata": {
+                    "is_first_message": message_data.get("is_first_message", False),
+                    "chat_id": user_info.get("telegram_id")
+                }
+            }
+            
+            # Если это аудио сообщение, добавляем информацию о файле
+            if message_data.get("audio_file_id"):
+                webhook_data["message"]["audio_file_id"] = message_data["audio_file_id"]
+                webhook_data["message"]["audio_duration"] = message_data.get("audio_duration")
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    N8N_WEBHOOK_URL,
+                    json=webhook_data,
+                    headers={"Content-Type": "application/json"},
+                    timeout=aiohttp.ClientTimeout(total=30)
+                ) as response:
+                    if response.status == 200:
+                        logger.info(f"Webhook успешно отправлен на n8n для пользователя {user_info.get('telegram_id')}")
+                        return True
+                    else:
+                        logger.error(f"Ошибка отправки webhook на n8n: {response.status}")
+                        return False
+                        
+        except asyncio.TimeoutError:
+            logger.error("Таймаут при отправке webhook на n8n")
+            return False
+        except Exception as e:
+            logger.error(f"Ошибка отправки webhook на n8n: {e}")
+            return False
+
+    async def is_new_user(self, user_id: int) -> bool:
+        """Проверяет, является ли пользователь новым (нет записей в БД)"""
+        if not self.db_pool:
+            return True
+            
+        try:
+            async with self.db_pool.acquire() as conn:
+                # Проверяем, есть ли клиент с таким telegram_id
+                client = await conn.fetchrow(
+                    "SELECT id FROM client WHERE telegram_id = $1",
+                    user_id
+                )
+                return client is None
+                
+        except Exception as e:
+            logger.error(f"Ошибка проверки нового пользователя: {e}")
+            return True
+
+    async def is_first_message_after_welcome(self, user_id: int) -> bool:
+        """Проверяет, является ли это первым сообщением пользователя после приветствия"""
+        if not self.db_pool:
+            return False
+            
+        try:
+            async with self.db_pool.acquire() as conn:
+                # Получаем все сообщения пользователя
+                messages = await conn.fetch(
+                    """
+                    SELECT message_text, is_from_bot 
+                    FROM message m
+                    JOIN client c ON m.client_id = c.id
+                    WHERE c.telegram_id = $1
+                    ORDER BY m.timestamp ASC
+                    """,
+                    user_id
+                )
+                
+                # Если сообщений нет, это не первое сообщение после приветствия
+                if len(messages) == 0:
+                    return False
+                
+                # Ищем паттерн: первое сообщение от бота (приветствие), 
+                # затем первое сообщение от пользователя
+                if len(messages) == 2:
+                    first_message = messages[0]
+                    second_message = messages[1]
+                    
+                    # Первое должно быть от бота, второе от пользователя
+                    if (first_message['is_from_bot'] and 
+                        not second_message['is_from_bot']):
+                        return True
+                
+                return False
+                
+        except Exception as e:
+            logger.error(f"Ошибка проверки первого сообщения после приветствия: {e}")
+            return False
+
 # Обработчики команд
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик команды /start"""
@@ -338,10 +482,49 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик текстовых сообщений"""
     user_message = update.message.text
     user_id = update.effective_user.id
+    user = update.effective_user
+    
+    # Проверяем, нужно ли отправить автоматическое приветствие
+    welcome_sent = await bot_instance.send_welcome_if_new_user(update)
     
     # Сохраняем сообщение пользователя
     await bot_instance.save_message_to_db(user_id, user_message, is_from_bot=False)
     
+    # Если приветствие было отправлено, это означает что текущее сообщение - первое после приветствия
+    # Также проверяем обычным способом для случаев когда пользователь уже существует
+    is_first_message = welcome_sent or await bot_instance.is_first_message_after_welcome(user_id)
+    
+    # Если это первое сообщение после приветствия, отправляем webhook на n8n
+    if is_first_message:
+        user_info = {
+            "telegram_id": user_id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "username": user.username,
+            "language_code": user.language_code
+        }
+        
+        message_data = {
+            "text": user_message,
+            "message_type": "text",
+            "timestamp": update.message.date.isoformat(),
+            "message_id": update.message.message_id,
+            "is_first_message": True
+        }
+        
+        # Отправляем webhook на n8n
+        webhook_sent = await bot_instance.send_n8n_webhook(user_info, message_data)
+        
+        if webhook_sent:
+            logger.info(f"Первое сообщение пользователя {user_id} отправлено в n8n")
+        else:
+            logger.warning(f"Не удалось отправить первое сообщение пользователя {user_id} в n8n")
+        
+        # Если это первое сообщение, не отвечаем стандартным способом
+        # n8n workflow будет обрабатывать это сообщение
+        return
+    
+    # Для всех остальных сообщений - стандартная обработка
     # Ищем релевантную информацию в базе знаний
     context_info = await bot_instance.search_knowledge(user_message)
     
@@ -354,6 +537,61 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Сохраняем ответ бота
     await bot_instance.save_message_to_db(user_id, bot_response, is_from_bot=True)
 
+async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик голосовых сообщений"""
+    user_id = update.effective_user.id
+    user = update.effective_user
+    voice = update.message.voice
+    
+    # Проверяем, нужно ли отправить автоматическое приветствие
+    welcome_sent = await bot_instance.send_welcome_if_new_user(update)
+    
+    # Сохраняем информацию об аудио сообщении в БД
+    audio_message_text = f"[Голосовое сообщение: {voice.duration}с]"
+    await bot_instance.save_message_to_db(user_id, audio_message_text, is_from_bot=False)
+    
+    # Если приветствие было отправлено, это означает что текущее сообщение - первое после приветствия
+    # Также проверяем обычным способом для случаев когда пользователь уже существует
+    is_first_message = welcome_sent or await bot_instance.is_first_message_after_welcome(user_id)
+    
+    # Если это первое сообщение после приветствия, отправляем webhook на n8n
+    if is_first_message:
+        user_info = {
+            "telegram_id": user_id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "username": user.username,
+            "language_code": user.language_code
+        }
+        
+        message_data = {
+            "text": None,  # Для аудио сообщений текста нет
+            "message_type": "voice",
+            "timestamp": update.message.date.isoformat(),
+            "message_id": update.message.message_id,
+            "is_first_message": True,
+            "audio_file_id": voice.file_id,
+            "audio_duration": voice.duration
+        }
+        
+        # Отправляем webhook на n8n
+        webhook_sent = await bot_instance.send_n8n_webhook(user_info, message_data)
+        
+        if webhook_sent:
+            logger.info(f"Первое аудио сообщение пользователя {user_id} отправлено в n8n")
+        else:
+            logger.warning(f"Не удалось отправить первое аудио сообщение пользователя {user_id} в n8n")
+        
+        # Если это первое сообщение, не отвечаем стандартным способом
+        # n8n workflow будет обрабатывать это сообщение
+        return
+    
+    # Для всех остальных аудио сообщений - стандартный ответ
+    await update.message.reply_text("Спасибо за голосовое сообщение! Я получил его и передал для обработки.")
+    
+    # Сохраняем ответ бота
+    await bot_instance.save_message_to_db(user_id, "Спасибо за голосовое сообщение! Я получил его и передал для обработки.", is_from_bot=True)
+
 def main():
     """Основная функция запуска бота"""
     global bot_instance
@@ -365,6 +603,7 @@ def main():
     # Добавление обработчиков
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application.add_handler(MessageHandler(filters.VOICE, handle_voice))
     
     logger.info("Бот запущен!")
     
