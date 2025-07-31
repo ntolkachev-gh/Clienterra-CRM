@@ -41,7 +41,7 @@ class Client(db.Model):
     name = db.Column(db.String(100))
     organization = db.Column(db.String(200))
     project_description = db.Column(db.Text)
-    user_brief = db.Column(db.Text(length=10000))  # Сырой бриф от пользователя (очень большое поле)
+    user_brief = db.Column(db.Text)  # Сырой бриф от пользователя (очень большое поле)
     required_functions = db.Column(db.Text)
     traffic_source = db.Column(db.String(100))
     status = db.Column(db.String(50), default='новый')
